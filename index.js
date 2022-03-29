@@ -25,7 +25,9 @@ app.use(bodyParser.json()) // será util para API mas já está configurado
 // Rotas
 // Estou criando uma variavel 'perguntas' para mostrar as perguntas que vem do formulario, ai eu pesquiso por elas na rota e a lista é mandada para a variavel.
 app.get('/', (req, res) => {
-    Pergunta.findAll({ raw: true }).then(perguntas => {
+    Pergunta.findAll({ raw: true, order:[
+        ['id','DESC'] // ASC = Crescente e DESC = Decrescente
+    ]}).then(perguntas => {
         res.render('index', {
             perguntas: perguntas
         })
@@ -49,4 +51,18 @@ app.post('/salvarpergunta', (req, res) => {
     })
 }) // caso esse INSERT for bem sucedido, o .redirect (palavra reservada do express) direciona o usuario para a home do site
 
+app.get('/pergunta/:id',(req, res) => {
+    var id = req.params.id
+    Pergunta.findOne({
+        where: {id: id}
+    }).then(pergunta => {
+        if(pergunta != undefined){ // pergunta encontrada
+            res.render('pergunta', {
+                pergunta: pergunta
+                })
+        }else{ // não encontrada
+            res.redirect('/')
+        }
+    })
+})
 app.listen(3000, () => {console.log('App rodando!')})
