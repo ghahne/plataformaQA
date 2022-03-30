@@ -3,6 +3,7 @@ const app = express()
 const bodyParser = require('body-parser')
 const connection = require('./database/dataBase')
 const Pergunta = require('./database/Pergunta')
+const Resposta = require('./database/Resposta')
 
 //database
 connection
@@ -57,12 +58,35 @@ app.get('/pergunta/:id',(req, res) => {
         where: {id: id}
     }).then(pergunta => {
         if(pergunta != undefined){ // pergunta encontrada
-            res.render('pergunta', {
-                pergunta: pergunta
+            Resposta.findAll({
+                where: {perguntaId: pergunta.id}, // var perguntaId usa o bParser para chamar a pergunta do front
+                // esse order deixa a ordem das respostas da mais recente para a mais antiga
+                order: [
+                    ['id','DESC']
+                ]
+            }).then(respostas => {
+                res.render('pergunta', {
+                    pergunta: pergunta,
+                    respostas: respostas 
                 })
+            })
         }else{ // não encontrada
             res.redirect('/')
         }
     })
 })
+
+app.post('/responder', (req, res) => {
+    // essas variaveis interagem com o MODEL de resposta, "linkando" as vars com a estrutura da resposta
+    var corpo = req.body.corpo // corpo da RESPOSTA
+    var perguntaId = req.body.pergunta// id da PERGUNTA associada a RESPOSTA
+    // isso cria a RESPOSTA
+    Resposta.create({
+        corpo: corpo,
+        perguntaId: perguntaId
+    }).then(() => {
+        res.redirect('/pergunta/' + perguntaId) // redirect recebe a var que mostra o ID da pergunta, fazendo com que o usuário volte para a página dela
+    })
+})
+
 app.listen(3000, () => {console.log('App rodando!')})
